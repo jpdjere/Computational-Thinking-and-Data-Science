@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Nov 28 20:26:13 2016
+
+@author: jpdjere
+"""
+songs = [('Roar',4.4, 4.0),('Sail',3.5, 7.7),('Timber', 5.1, 6.9),('Wannabe',2.7, 1.2)]
+max_size = 12.2
+
+def song_playlist(songs, max_size):
+    """
+    songs: list of tuples, ('song_name', song_len, song_size)
+    max_size: float, maximum size of total songs that you can fit
+
+    Start with the song first in the 'songs' list, then pick the next 
+    song to be the one with the lowest file size not already picked, repeat
+
+    Returns: a list of a subset of songs fitting in 'max_size' in the order 
+             in which they were chosen.
+    """
+    songsCopy = songs[:]
+#    print(songsCopy)
+    playlist = []
+    occupiedSpace = 0
+    if songsCopy[0][2] <= max_size:
+        playlist.append(songsCopy[0][0])
+        occupiedSpace += songsCopy[0][2]
+        del songsCopy[0]
+    else:
+        return []
+    
+#    print(songsCopy)
+    songsCopy = sorted(songsCopy, key=lambda el:el[2])
+#    print(songsCopy)
+#    print(playlist, "occupied space is: "+str(occupiedSpace))
+#    print(len(songsCopy))
+    for i in range(len(songsCopy)):
+#        print(occupiedSpace + songsCopy[i][2])
+        if occupiedSpace + songsCopy[i][2] <= max_size:
+            
+            playlist.append(songsCopy[i][0])
+            occupiedSpace += songsCopy[i][2]
+#            print(playlist, "occupied space is: "+str(occupiedSpace))
+        else:
+            return playlist
+        
+    return playlist
+    
+
+song_playlist(songs, max_size)

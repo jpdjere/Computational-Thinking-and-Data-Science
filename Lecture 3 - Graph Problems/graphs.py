@@ -52,7 +52,7 @@ class Digraph(object):
             raise ValueError('Node not in graph')
         self.edges[src].append(dest)
         
-    def childreOf(self, node):
+    def childrenOf(self, node):
         return self.edges[node]
 
     def hasNode(self, node):
@@ -96,4 +96,23 @@ def buildCityGraph(graphType):
     g.addEdge(Edge(g.getNode('LA'), g.getNode('Boston')))
     return g
 
-print(buildCityGraph(Graph))
+#print(buildCityGraph(Graph))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
