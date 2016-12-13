@@ -156,7 +156,7 @@ class Patient(object):
         returns: The total virus population at the end of the update (an
         integer)
         """
-        viruses_copy = self.getViruses()
+        viruses_copy = self.getViruses()[:]
         for index,eachVirus in enumerate(viruses_copy):
             
             #Si el virus se muere
@@ -166,7 +166,7 @@ class Patient(object):
         #Calculo el popDenisty -> el numerop de viruses vivos dividido maxPop
         popDensity = self.getTotalPop()/self.getMaxPop()
         
-        viruses_copy = self.getViruses()
+        viruses_copy = self.getViruses()[:]
         for eachVirus in viruses_copy:
             try:
                 self.viruses.append(eachVirus.reproduce(popDensity))
@@ -389,7 +389,7 @@ class TreatedPatient(Patient):
         maxPop: The  maximum virus population for this patient (an integer)
         """
         Patient.__init__(self,viruses,maxPop)
-        self.adminDrugs = []
+        self.administeredDrugs = []
 
 
     def addPrescription(self, newDrug):
@@ -428,9 +428,22 @@ class TreatedPatient(Patient):
         returns: The population of viruses (an integer) with resistances to all
         drugs in the drugResist list.
         """
-
-        # TODO
-
+        amountResistant = 0
+        for virus in self.viruses:
+#            print(self.getTotalPop(), virus, end=' ')
+            resistantToAll = True
+            keyError = True #para no contar casos en que no haya una druga en las resistencias
+            for drug in drugResist:
+                try:
+                    if virus.resistances[drug] == False:
+                        resistantToAll = False
+                        break
+                except KeyError:
+                    keyError = False
+                    pass
+            if resistantToAll and keyError:
+                amountResistant += 1
+        return amountResistant
 
     def update(self):
         """
@@ -452,14 +465,36 @@ class TreatedPatient(Patient):
         returns: The total virus population at the end of the update (an
         integer)
         """
+        viruses_copy = self.getViruses()[:]
+#        print(viruses_copy)
+        for eachVirus in viruses_copy:
+            
+            #Si el virus se muere
+            if eachVirus.doesClear():
+                self.viruses.remove(eachVirus)
 
-        # TODO
+                
+        #Calculo el popDenisty -> el numerop de viruses vivos dividido maxPop
+        popDensity = self.getTotalPop()/self.getMaxPop()
+        
+        viruses_copy2 = self.getViruses()[:]
+#        print(viruses_copy)
+        for eachVirus in viruses_copy2:
+            try:
+                self.viruses.append(eachVirus.reproduce(popDensity, self.administeredDrugs))
+            except NoChildException:
+                pass
+
+            
+        return len(self.viruses)
+                
 
 
 
 #
 # PROBLEM 4
 #
+import numpy as np
 def simulationWithDrug(numViruses, maxPop, maxBirthProb, clearProb, resistances,
                        mutProb, numTrials):
     """
@@ -482,5 +517,44 @@ def simulationWithDrug(numViruses, maxPop, maxBirthProb, clearProb, resistances,
     numTrials: number of simulation runs to execute (an integer)
     
     """
-
-    # TODO
+    totalRunsTotals = []
+    totalRunsGResistant = []
+    timeSteps = 300
+    for trial in range(numTrials):
+        #En cada trial creo la lista de viruses (el numero es numViruses)
+        eachRunValuesTotal = []
+        eachRunValuesGResistant = []        
+        viruses = []
+        for numVirus in range(numViruses):
+            viruses.append(ResistantVirus(maxBirthProb,clearProb,resistances,mutProb))
+        #Se los meto al paciente
+        patient = TreatedPatient(viruses,maxPop)
+    
+        #y simulo 300 timesteps
+        for step in range(timeSteps):
+            patient.update()
+#            print(patient.getTotalPop(), end=" ")
+            eachRunValuesTotal.append(patient.getTotalPop())
+            eachRunValuesGResistant.append(patient.getResistPop(['guttagonol']))
+            if step == 149:
+                patient.addPrescription('guttagonol')
+                
+        totalRunsTotals.append(eachRunValuesTotal)
+        totalRunsGResistant.append(eachRunValuesGResistant)
+    
+    totalRunsTotalsPy = np.array(totalRunsTotals)
+    totalRunsGResistantPy = np.array(totalRunsGResistant)
+    
+    yvaluesTotals = np.average(totalRunsTotalsPy, axis = 0)
+    yvaluesTotals = yvaluesTotals.tolist()
+    yvaluesGResistant = np.average(totalRunsGResistantPy, axis = 0)
+    yvaluesGResistant = yvaluesGResistant.tolist()        
+    pylab.figure('avg.pop')
+    pylab.plot(yvaluesTotals, label='Avg Total Population')
+    pylab.plot(yvaluesGResistant, label='Avg G-Res Population')
+    pylab.title('Average Population vs TimeSteps')
+    pylab.xlabel('Timesteps')
+    pylab.ylabel('Average Population')
+    pylab.legend()
+    pylab.show()    
+    
